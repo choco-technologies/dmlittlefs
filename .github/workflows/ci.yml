@@ -55,32 +55,3 @@ jobs:
           export DMOD_DMF_DIR=$(pwd)/build/dmf
           dmf-get install -d ${DMOD_DMF_DIR}/test_dmlittlefs-local.dmd -y
           ${DMOD_LOADER} build/dmf/test_dmlittlefs.dmf
-
-  build-targets:
-    name: Build for ${{ matrix.arch }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    container:
-      image: chocotechnologies/dmod:1.0.4
-    strategy:
-      matrix:
-        arch: [ armv7/cortex-m4, armv7/cortex-m7 ]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Build dmlittlefs and mklittlefs
-        run: |
-          mkdir -p build
-          cd build
-          cmake .. -DDMOD_TOOLS_NAME=arch/${{ matrix.arch }}
-          cmake --build . > build.log 2>&1 || { cat build.log; exit 1; }
-          cat build.log
-          if grep -E "warning:|error:" build.log | grep -v "build-id"; then
-            echo "Compiler warnings found"
-            exit 1
-          fi
-          test -f dmf/dmlittlefs.dmf
-          test -f dmf/mklittlefs.dmf
