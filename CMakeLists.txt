@@ -62,19 +62,40 @@ set(DMOD_DIF_IMPLS          )
 dmod_add_library(${DMOD_MODULE_NAME} ${DMOD_MODULE_VERSION}
     # List of source files - can include C and C++ files
     src/dmlittlefs.c
+    src/dmlittlefs_file.c
+    src/dmlittlefs_dir.c
+    src/dmlittlefs_block.c
+    src/dmlittlefs_util.c
+    src/dmlittlefs_libc.c
+    # littlefs 2.10.2 (upstream sources, configured by the definitions below)
+    lib/littlefs/lfs.c
+    lib/littlefs/lfs_util.c
 )
 
 target_include_directories(${DMOD_MODULE_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/littlefs
+)
+
+# littlefs on the DMOD runtime: see src/dmlittlefs_lfs_config.h (DMOD heap instead of malloc, the module
+# locks the volume, no asserts / log output, portable bit helpers). lfs_util.h includes it through LFS_DEFINES.
+target_compile_definitions(${DMOD_MODULE_NAME} PRIVATE
+    LFS_DEFINES=dmlittlefs_lfs_config.h
 )
 
 target_include_directories(${DMOD_MODULE_NAME}_if INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-# To depend on another module's headers, use:
-#   dmod_link_modules(${DMOD_MODULE_NAME}
-#       other_module@1.0
-#   )
+# dmfsi: the file system interface (DIF) implemented by dmlittlefs
+# dmdrvi: DMDRVI_IOCTL_BLOCK_GET_INFO / _ERASE, the geometry and erase of dmdevfs block nodes
+dmod_link_modules(${DMOD_MODULE_NAME}
+    dmfsi
+    dmdrvi@>=2.0
+)
+
+# mklittlefs - command line front end of dmlittlefs_mkfs()
+add_subdirectory(apps/mklittlefs)
 enable_testing()
 add_subdirectory(tests)
