@@ -8,44 +8,31 @@
 #include "dmlittlefs_defs.h"
 
 /**
- * Public API for the dmlittlefs module.
+ * dmlittlefs - littlefs, the power-loss resilient, wear levelling file system
+ * for NOR flash, for DMOD.
  *
- * Functions are declared with the dmod_dmlittlefs_api(...) macro - dmod's
- * standard pattern for functions callable from other modules (or from this
- * module's own tests/), resolved dynamically by the loader rather than
- * through normal static linkage. See dm_sw_ring/include/dm_sw_ring.h for a
- * fully worked real-world example of the same shape.
+ * The file system itself is used through dmvfs - dmlittlefs implements the
+ * dmfsi DIF, so it is mounted like any other file system:
  *
- * Definitions in src/dmlittlefs.c use the matching
- * dmod_dmlittlefs_api_declaration(...) macro - a plain C function
- * definition here will NOT satisfy these declarations at link time.
+ *     dmvfs_mount_fs("dmlittlefs", "/mnt/flash", "device=/dev/dmspiflashx/flash");
  *
- * This is an example interface using the usual "opaque handle" pattern -
- * replace the handle, functions, and struct definition in
- * src/dmlittlefs.c with your module's real API.
+ * Mount options (separated by ';' or ','): "device=<path>" (required, or just the path),
+ * "cache=<bytes>", "prog=<bytes>", "read=<bytes>", "lookahead=<bytes>",
+ * "block_cycles=<erases>", "offset=<bytes>" and "size=<bytes>" (a part of the device, multiples of the
+ * erase block) and "block_size=<bytes>" for an image file. See docs/README.md.
+ *
+ * The function below is the module's own API, for work outside of a mount.
  */
-
-/* Opaque handle - the real struct is defined in src/dmlittlefs.c */
-typedef struct dmlittlefs* dmlittlefs_t;
 
 /**
- * Create a new dmlittlefs instance.
+ * Create a new, empty littlefs on a block device (or an image file).
  *
- * @return A valid handle on success, or NULL on allocation failure.
- */
-dmod_dmlittlefs_api(1.0, dmlittlefs_t, _create, ( void ));
-
-/**
- * Destroy an instance created by dmlittlefs_create(). Safe to call with
- * NULL.
- */
-dmod_dmlittlefs_api(1.0, void, _destroy, ( dmlittlefs_t handle ));
-
-/**
- * Example accessor - replace with your module's real API.
+ * All data on the device is lost. The device must not be mounted. @p config
+ * is the same string as the mount configuration (at least the device).
  *
- * @return true if handle is a valid, non-NULL instance.
+ * @param config "device=<path>[;options]" or just the device path
+ * @return 0 on success, negative errno on failure
  */
-dmod_dmlittlefs_api(1.0, bool, _is_valid, ( dmlittlefs_t handle ));
+dmod_dmlittlefs_api(1.0, int, _mkfs, ( const char* config ));
 
 #endif // DMLITTLEFS_H

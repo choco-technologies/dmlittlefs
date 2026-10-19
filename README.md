@@ -3,11 +3,25 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/choco-technologies/dmlittlefs/actions/workflows/ci.yml/badge.svg)](https://github.com/choco-technologies/dmlittlefs/actions/workflows/ci.yml)
 
-dmlittlefs DMOD library module.
+dmlittlefs - [littlefs](https://github.com/littlefs-project/littlefs) for DMOD: a small, power-loss resilient file system with wear levelling for NOR flash.
 
 ## Description
 
-TODO: describe what this module does.
+dmlittlefs implements the dmfsi file system interface, so it is mounted through dmvfs like any other
+file system. It lives on a block device that can be erased - a dmdevfs node of a flash chip such as
+`/dev/dmspiflashx/flash` (dmspiflash, the N25Q128A on the STM32F746G-DISCO) - or on an image file on the host.
+
+```
+mklittlefs device=/dev/dmspiflashx/flash          # once: create an empty file system (ALL DATA IS LOST)
+mount -t dmlittlefs -o device=/dev/dmspiflashx/flash /mnt/flash
+```
+
+Why littlefs and not FAT on a NOR flash: it never overwrites in place (copy-on-write), survives a power loss
+at any moment, spreads the erases over the whole chip and needs only a few hundred bytes of RAM. See
+[docs/README.md](docs/README.md) for the mount options, what is and is not supported, and the geometry rules.
+
+Contents: the module (`dmlittlefs`), the formatting tool (`mklittlefs`), and the unmodified littlefs 2.10.2
+sources in `lib/littlefs` (BSD-3-Clause, see `lib/littlefs/LICENSE.md`).
 
 ## Building
 
