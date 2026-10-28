@@ -44,7 +44,7 @@ jobs:
       - name: Build dmod_loader from dmod develop
         run: |
           DMOD_SRC=$(mktemp -d)
-          git clone --depth 1 -b develop https://github.com/choco-technologies/dmod.git "$DMOD_SRC"
+          git clone --depth 1 --recursive -b develop https://github.com/choco-technologies/dmod.git "$DMOD_SRC"
           cmake -S "$DMOD_SRC" -B "$DMOD_SRC/build" -DDMOD_MODE=DMOD_SYSTEM \
             -DDMOD_BUILD_EXAMPLES=ON -DDMOD_BUILD_TESTS=OFF
           cmake --build "$DMOD_SRC/build" --target dmod_loader
